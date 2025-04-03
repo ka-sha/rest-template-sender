@@ -1,0 +1,69 @@
+openapi: 3.0.3
+info:
+  title: API сервиса отправки запроса/ответа RestTemplate.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+tags:
+  - name: SpringBootOpenApiGeneration
+    description: Контроллеры
+paths:
+  /api/send-to-kafka:
+    get:
+      tags:
+        - SendMessageToKafka
+      summary: Отправляет сообщение в Kafka. Пишет метрику об успешной/неуспешной отправке сообщения в Kafka.
+      operationId: sendToKafka
+      requestBody:
+        $ref: 'models/send-to-kafka.yaml#/components/requestBodies/SendToKafkaRequest'
+      responses:
+        '200':
+          description: Сообщение успешно отправлено.
+          content:
+            application/json:
+              schema:
+                $ref: 'models/send-to-kafka.yaml#/components/schemas/SendToKafkaResponse'
+        '400':
+          description: Сообщение не отправлено.
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Сообщение не удалось отправить
+        '500':
+          description: Внутренняя ошибка.
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Сообщение не удалось отправить из-за внутренней ошибки
+  /api/send-parallel:
+    get:
+      tags:
+        - SendParallelRequests
+      summary: Распараллеливает запросы через RestTemplate во внешние сервисы через CompletableFuture.
+      operationId: sendParallelRequests
+      requestBody:
+        required: false
+        content:
+          text/plain:
+            schema:
+              type: string
+              example: "Распараллеливаем запросы"
+      responses:
+        '200':
+          description: Запросы успешно отправлены.
+        '400':
+          description: Запрос не отправлен.
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Запрос не удалось отправить
+        '500':
+          description: Внутренняя ошибка.
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Запрос не удалось отправить из-за внутренней ошибки
