@@ -23,8 +23,8 @@ public class SendParallelRequestsController implements SendParallelRequestsApi {
     @Override
     public ResponseEntity<Void> sendParallelRequests(String body) {
 
-        final HttpEntity<Void> request = null; // ???
-        final String url = "localhost:20808/msg/incoming";
+        final HttpEntity<Void> request = null;
+        final String url = "https://fakestoreapi.com/products";
         CompletableFuture<ResponseEntity<Void>> future = CompletableFuture.supplyAsync(
                 () -> restTemplate.exchange(url, HttpMethod.GET, request, Void.class), executor);
         try {
