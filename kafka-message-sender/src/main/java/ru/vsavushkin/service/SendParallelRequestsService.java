@@ -1,24 +1,19 @@
 package ru.vsavushkin.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-
-import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Stream;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 @Service
 public class SendParallelRequestsService {
 
     @Autowired
-    private RestTemplate restTemplate;
+    private RestTemplate loggingRestTemplate;
 
     @Value("${url1}")
     private String url1;
@@ -28,17 +23,21 @@ public class SendParallelRequestsService {
 
     private final static ExecutorService executor = Executors.newFixedThreadPool(4);
 
-    public CompletableFuture<List<ResponseEntity<Void>>> send() {
+    public void send() {
 
-        CompletableFuture<ResponseEntity<Void>> request1 = CompletableFuture.supplyAsync(
-                () -> restTemplate.exchange(url1, HttpMethod.GET, null, Void.class), executor);
-        CompletableFuture<ResponseEntity<Void>> request2 = CompletableFuture.supplyAsync(
-                () -> restTemplate.exchange(url2, HttpMethod.GET, null, Void.class), executor);
+        CompletableFuture<String> request1 =
+                CompletableFuture.supplyAsync(() -> loggingRestTemplate.getForObject(url1, String.class), executor);
+        CompletableFuture<String> request2 =
+                CompletableFuture.supplyAsync(() -> loggingRestTemplate.getForObject(url2, String.class), executor);
 
-        return CompletableFuture.allOf(request1, request2)
-                .thenApply(v -> Stream.of(request1, request2)
-                        .map(CompletableFuture::join)
-                        .filter(Objects::nonNull)
-                        .toList());
+        CompletableFuture.allOf(request1, request2)
+                .thenAccept(_ -> {
+                    try {
+                        request1.get();
+                        request2.get();
+                    } catch (Exception e) {
+                        System.out.println("Have some problems");
+                    }
+                });
     }
 }
